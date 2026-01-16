@@ -24,9 +24,11 @@ jobs:
 
       - name: Download hytale-downloader
         run: |
-          curl -L -o hytale-downloader \
-            https://github.com/decomp-project/hytale-downloader/releases/latest/download/hytale-downloader-linux-amd64
-          chmod +x hytale-downloader
+          curl -L -o hytale-downloader.zip https://downloader.hytale.com/hytale-downloader.zip
+          unzip -o hytale-downloader.zip
+          DOWNLOADER=$(find . -name "hytale-downloader-linux-*" -type f | head -1)
+          chmod +x "$DOWNLOADER"
+          mv "$DOWNLOADER" ./hytale-downloader
 
       - name: Setup Hytale auth
         run: |
@@ -35,8 +37,9 @@ jobs:
 
       - name: Download HytaleServer.jar
         run: |
-          mkdir -p libs
-          ./hytale-downloader -download-path ./server-download
+          mkdir -p libs server-download
+          ./hytale-downloader -download-path ./server-download/game.zip
+          unzip -o ./server-download/game.zip -d ./server-download/
           cp ./server-download/HytaleServer.jar libs/
 
       - name: Build with Gradle

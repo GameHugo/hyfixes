@@ -3,6 +3,7 @@ package com.hyfixes;
 import com.hyfixes.commands.ChunkStatusCommand;
 import com.hyfixes.commands.ChunkUnloadCommand;
 import com.hyfixes.commands.InteractionStatusCommand;
+import com.hyfixes.commands.WhoCommand;
 import com.hyfixes.listeners.EmptyArchetypeSanitizer;
 import com.hyfixes.listeners.GatherObjectiveTaskSanitizer;
 import com.hyfixes.listeners.InstancePositionTracker;
@@ -130,7 +131,8 @@ public class HyFixes extends JavaPlugin {
         getCommandRegistry().registerCommand(new ChunkStatusCommand(this));
         getCommandRegistry().registerCommand(new ChunkUnloadCommand(this));
         getCommandRegistry().registerCommand(new InteractionStatusCommand(this));
-        getLogger().at(Level.INFO).log("[CMD] Registered /chunkstatus, /chunkunload, and /interactionstatus commands");
+        getCommandRegistry().registerCommand(new WhoCommand());
+        getLogger().at(Level.INFO).log("[CMD] Registered /chunkstatus, /chunkunload, /interactionstatus and /who commands");
     }
 
     @Override

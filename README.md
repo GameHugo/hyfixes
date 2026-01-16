@@ -166,6 +166,37 @@ These occur due to:
 
 ---
 
+### 6. Chunk Memory Bloat (v1.2.0+)
+
+**Severity:** High - Causes unbounded memory growth and eventual OOM crashes
+
+**The Bug:**
+
+Hytale does not properly unload chunks when players move away from them. Chunks accumulate in memory indefinitely:
+
+- Player flies in a straight line, loads 5,735+ chunks
+- Only ~300 chunks are within view radius ("active")
+- The remaining 5,400+ "orphan" chunks stay cached in memory
+- Memory grows unbounded: 4GB → 14GB+ while idle
+
+**Impact:** Server eventually runs out of memory and crashes, or GC pauses become severe.
+
+**The Fix:**
+
+`ChunkUnloadManager` uses reflection to discover Hytale's internal chunk management APIs:
+- `ChunkStore.waitForLoadingChunks()` - Syncs chunk loading state
+- `ChunkLightingManager.invalidateLoadedChunks()` - Triggers chunk cleanup
+
+`ChunkCleanupSystem` is an `EntityTickingSystem` that runs these methods on the **main server thread** every 30 seconds, avoiding the `InvocationTargetException` that occurs when calling them from background threads.
+
+**Results:** Chunks now properly cycle - observed 942 → 211 chunks (77% reduction) after players move away.
+
+**Admin Commands:**
+- `/chunkstatus` - Shows current chunk counts and cleanup system status
+- `/chunkunload` - Forces immediate chunk cleanup
+
+---
+
 ## Technical Details
 
 | Fix | System Type | Registry | Hook Point |
@@ -175,6 +206,8 @@ These occur due to:
 | ProcessingBenchSanitizer | `RefSystem<ChunkStore>` | ChunkStoreRegistry | `onEntityRemove()` for `ProcessingBenchState` component |
 | InstancePositionTracker | `Listener` (EventHandler) | EventBus | `DrainPlayerFromWorldEvent`, `AddPlayerToWorldEvent` |
 | EmptyArchetypeSanitizer | `EntityTickingSystem<EntityStore>` | EntityStoreRegistry | Every tick, queries `TransformComponent` |
+| ChunkUnloadManager | `ScheduledExecutorService` | N/A (background thread) | Reflection-based API discovery, 30s interval |
+| ChunkCleanupSystem | `EntityTickingSystem<EntityStore>` | EntityStoreRegistry | Every 600 ticks (30s), calls cleanup on main thread |
 
 ## Building
 

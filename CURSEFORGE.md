@@ -27,6 +27,14 @@ When a player exits an instance (dungeon, cave, etc.) and the return world data 
 ### Empty Archetype Entities (Monitoring)
 Logs entities with corrupted/empty component data for debugging. These don't crash but indicate world data issues.
 
+### Chunk Memory Bloat (High - v1.2.0+)
+Hytale doesn't properly unload chunks when players move away, causing **unbounded memory growth** and eventual OOM crashes.
+- **Symptoms:** Server memory grows from 4GB to 14GB+ while players fly around; chunks never decrease
+- **Example:** Player loads 5,735 chunks, only 317 are in view radius, 5,400+ stay in memory forever
+- **Fix:** `ChunkCleanupSystem` runs on the main thread every 30 seconds to trigger Hytale's internal chunk cleanup
+- **Results:** Observed 77% reduction in loaded chunks (942 → 211) after fix
+- **Commands:** `/chunkstatus` (view chunk counts), `/chunkunload` (force cleanup)
+
 ## Installation
 
 1. Download `hyfixes-x.x.x.jar`
